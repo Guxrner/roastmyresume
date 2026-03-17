@@ -128,7 +128,7 @@ export default function Home() {
             <div style={s.ctaBox}>
               <p style={{ margin: '0 0 6px', fontWeight: 800, fontSize: 20, color: '#ffffff' }}>{t.upgrade}</p>
               <p style={{ margin: '0 0 16px', color: '#aaa', fontSize: 14 }}>Get a professionally rewritten CV ready to send — in 60 seconds.</p>
-              <a href="aicarrerservices.gumroad.com/l/roast-my-cv" target="_blank" rel="noopener noreferrer" style={s.gumBtn}>
+              <a href="https://aicarrerservices.gumroad.com/l/roast-my-cv" target="_blank" rel="noopener noreferrer" style={s.gumBtn}>
                 {t.upgradeBtn}
               </a>
               <p style={{ margin: '10px 0 0', fontSize: 11, color: '#888' }}>One-time payment • Instant delivery • Money-back guarantee</p>
