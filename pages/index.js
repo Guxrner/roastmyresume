@@ -11,10 +11,26 @@ export default function Home() {
   const [dragging, setDragging] = useState(false);
   const [fileLoaded, setFileLoaded] = useState('');
 
-  const handleFile = (file) => {
+  const handleFile = async (file) => {
     if (!file) return;
     if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-      setFileLoaded('⚠️ PDF detected — please paste your CV text instead');
+      setFileLoaded('⏳ Reading PDF...');
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfjsLib = require('pdfjs-dist/legacy/build/pdf');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = require('pdfjs-dist/legacy/build/pdf.worker.entry');
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = '';
+        for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          fullText += content.items.map(item => item.str).join(' ') + '\n';
+        }
+        setCvText(fullText.trim());
+        setFileLoaded('✅ ' + file.name);
+      } catch (err) {
+        setFileLoaded('❌ Error — paste your CV text below');
+      }
       return;
     }
     const reader = new FileReader();
@@ -42,8 +58,8 @@ export default function Home() {
   };
 
   const t = {
-    en: { sub: 'Upload your CV and get brutally honest feedback — free.', upload: 'Click to upload your CV (TXT only)', paste: 'Or paste your CV text below', pdfWarning: '⚠️ PDF not supported yet — please paste your CV text in the box below', medium: 'Honest but kind', savage: 'No mercy', btn: 'Roast my CV 🔥', loading: 'Roasting...', score: 'CV Score', roast: '🔥 The Roast', fixes: '✅ How to Fix It', upgrade: 'Want a full rewrite?', upgradeBtn: 'Get my rewritten CV — $4.99 USD' },
-    es: { sub: 'Sube tu CV y recibe feedback brutalmente honesto — gratis.', upload: 'Haz clic para subir tu CV (solo TXT)', paste: 'O pega el texto de tu CV abajo', pdfWarning: '⚠️ PDF no soportado aún — pega el texto de tu CV en el cuadro de abajo', medium: 'Honesto pero amable', savage: 'Sin piedad', btn: 'Roastea mi CV 🔥', loading: 'Roasteando...', score: 'Puntuación', roast: '🔥 El Roast', fixes: '✅ Cómo Arreglarlo', upgrade: '¿Quieres la reescritura completa?', upgradeBtn: 'Obtener mi CV reescrito — $4.99 USD' }
+    en: { sub: 'Upload your CV and get brutally honest feedback — free.', upload: 'Click to upload your CV (PDF or TXT)', paste: 'Or paste your CV text below', medium: 'Honest but kind', savage: 'No mercy', btn: 'Roast my CV 🔥', loading: 'Roasting...', score: 'CV Score', roast: '🔥 The Roast', fixes: '✅ How to Fix It', upgrade: 'Want a full rewrite?', upgradeBtn: 'Get my rewritten CV — $4.99 USD' },
+    es: { sub: 'Sube tu CV y recibe feedback brutalmente honesto — gratis.', upload: 'Haz clic para subir tu CV (PDF o TXT)', paste: 'O pega el texto de tu CV abajo', medium: 'Honesto pero amable', savage: 'Sin piedad', btn: 'Roastea mi CV 🔥', loading: 'Roasteando...', score: 'Puntuación', roast: '🔥 El Roast', fixes: '✅ Cómo Arreglarlo', upgrade: '¿Quieres la reescritura completa?', upgradeBtn: 'Obtener mi CV reescrito — $4.99 USD' }
   }[lang];
 
   const bg = '#0D0D0D';
@@ -78,17 +94,15 @@ export default function Home() {
           onDragLeave={() => setDragging(false)}
           onDrop={handleDrop}
           onClick={() => document.getElementById('fileInput').click()}>
-          <input id="fileInput" type="file" accept=".txt" onChange={(e) => handleFile(e.target.files[0])} style={{ display: 'none' }} />
-          <div style={{ fontSize: '2rem' }}>{fileLoaded ? '📄' : '⬆️'}</div>
-          <p style={{ margin: '8px 0 0', fontWeight: 700, fontSize: 15, color: fileLoaded ? (fileLoaded.includes('⚠️') ? '#F59E0B' : '#10B981') : text }}>{fileLoaded || t.upload}</p>
-          <p style={{ margin: '4px 0 0', color: muted, fontSize: 12 }}>TXT files only</p>
-        </div>
-
-        {fileLoaded && fileLoaded.includes('⚠️') && (
-          <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#F59E0B' }}>
-            {t.pdfWarning}
+          <input id="fileInput" type="file" accept=".txt,.pdf" onChange={(e) => handleFile(e.target.files[0])} style={{ display: 'none' }} />
+          <div style={{ fontSize: '2rem' }}>
+            {fileLoaded.includes('⏳') ? '⏳' : fileLoaded.includes('✅') ? '✅' : fileLoaded.includes('❌') ? '❌' : '⬆️'}
           </div>
-        )}
+          <p style={{ margin: '8px 0 0', fontWeight: 700, fontSize: 15, color: fileLoaded.includes('✅') ? '#10B981' : fileLoaded.includes('❌') ? '#ff6b6b' : fileLoaded.includes('⏳') ? '#F59E0B' : text }}>
+            {fileLoaded || t.upload}
+          </p>
+          <p style={{ margin: '4px 0 0', color: muted, fontSize: 12 }}>PDF • TXT</p>
+        </div>
 
         <p style={{ textAlign: 'center', color: muted, margin: '12px 0', fontSize: 13 }}>{t.paste}</p>
         <textarea value={cvText} onChange={e => setCvText(e.target.value)} placeholder={t.paste} style={{ width: '100%', minHeight: 120, padding: 12, borderRadius: 8, border: `1px solid ${border}`, fontSize: 13, fontFamily: 'monospace', boxSizing: 'border-box', resize: 'vertical', background: card, color: text }} />
