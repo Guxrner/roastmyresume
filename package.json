@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
+    "@cantoo/pdf-lib": "^2.6.5",
     "next": "16.1.6",
     "pdf-parse": "^2.4.5",
     "pdfjs-dist": "^5.5.207",
